@@ -23,10 +23,11 @@ class Play:
     def player_choose_pokemon_team(self, pokemon_to_choose: list, num=1):
         # 玩家选择队伍中的Pokemon
         print(f"Choose {num} pokemon for your team:")
-        pokemon_to_choose = copy.copy(pokemon_to_choose)
+        pokemon_to_choose = copy.deepcopy(pokemon_to_choose)
         index = 0
         while len(self.player_team) < num:
             self.print_pokemon_list(pokemon_to_choose)
+            print()
             choice = input(f"Select your pokemon {index} by number: ")
             if valid_choice(choice, len(pokemon_to_choose)):
                 self.player_team.append(pokemon_to_choose.pop(int(choice) - 1))
@@ -34,12 +35,16 @@ class Play:
             else:
                 print("Invalid choice, please select a valid Pokemon")
         print("Here is your pokemon team:")
+        for i in self.player_team:
+            i.operator = 'player'
         self.print_pokemon_list(self.player_team)
 
     def computer_choose_pokemon_team(self, pokemon_to_choose: list, num=1):
         # 电脑选择对战的队伍
         print(f"Your opponent is choosing {num} pokemon")
         self.computer_team.extend(random.sample(pokemon_to_choose, num))
+        for i in self.computer_team:
+            i.operator = 'computer'
         print("Here is your opponent's team:")
         self.print_pokemon_list(self.computer_team)
 
@@ -106,17 +111,24 @@ class Play:
         if valid_choice(choice, len(skills)):
             player_skill = self.current_player_pokemon.skills[int(choice) - 1]
             self.current_player_pokemon.use_skill(
-                player_skill, self.current_computer_pokemon
+                player_skill, self.current_computer_pokemon, self
             )
         else:
             print("Invalid choice, please select a valid Skill")
-
+            
     def computer_use_skills(self):
         # 电脑随机选择技能
         computer_skill = random.choice(self.current_computer_pokemon.skills)
         self.current_computer_pokemon.use_skill(
-            computer_skill, self.current_player_pokemon
+            computer_skill, self.current_player_pokemon, self
         )
+
+    def take_effect(self):
+        print('玩家状态')
+        self.current_player_pokemon.apply_status_effect()
+        print('------')
+        print('电脑状态')
+        self.current_computer_pokemon.apply_status_effect()
 
     def battle_round_begin(self):
         # 回合开始
@@ -127,10 +139,12 @@ class Play:
     def battle_round(self):
         # 回合进行
         print(
-            f"\n{self.current_player_pokemon.name} vs {self.current_computer_pokemon.name}"
+            f"\n-----{self.current_player_pokemon.name} vs {self.current_computer_pokemon.name}-----"
         )
         self.player_use_skills()
+        self.take_effect()
         self.computer_use_skills()
+        self.take_effect()
         self.check_game_status()
 
     def run(self):
@@ -149,6 +163,7 @@ class Play:
 
 if __name__ == "__main__":
     pokemon1 = pokemon.Bulbasaur()
-    all_pokemon = [pokemon1]
+    pokemon2 = pokemon.PikaChu()
+    all_pokemon = [pokemon1,pokemon2]
     play = Play(all_pokemon)
     play.run()

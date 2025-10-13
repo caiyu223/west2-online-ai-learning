@@ -2,18 +2,24 @@ from __future__ import annotations
 import skills
 from skills import Skill
 from effects import Effect
+from play import *
+import random
 
 
 class Pokemon:
     name: str
     type: str
 
-    def __init__(self, hp: int, attack: int, defense: int) -> None:
+    def __init__(self, hp: int, attack: int, defense: int,avoid: int) -> None:
         # 初始化 Pokemon 的属性
         self.hp = hp
         self.max_hp = hp
         self.attack = attack
         self.defense = defense
+        self.avoid = avoid
+        self.hit_rate = 100
+        self.aviod_state =False
+        self.operator = None
         self.skills = self.initialize_skills()
         self.alive = True
         self.statuses = []
@@ -21,12 +27,24 @@ class Pokemon:
     def initialize_skills(self):
         # 抽象方法，子类应实现具体技能初始化
         raise NotImplementedError
+    
+    def avoid_determind(self,opponent:Pokemon):
+        if random.randint(1,100) >= opponent.avoid and random.randint(1,100) <= self.hit_rate:
+            return False
+        else:
+            opponent.aviod_state = True
+            return True
 
-    def use_skill(self, skill: Skill, opponent: Pokemon):
+    def use_skill(self, skill: Skill, opponent: Pokemon,play: Play):
         # 使用技能
-        print(f"{self.name} uses {skill.name}")
-        skill.execute(self, opponent)
+        if self.avoid_determind(opponent):  
+            print(f"{self.operator}'s skill miss")
+            opponent.passive_attack(play)
+        else:
+            print(f"{self.operator}'s {self.name} uses {skill.name}")
+            skill.execute(self, opponent)
 
+        
     def heal_self(self, amount):
         # 为自身恢复生命值
         if not isinstance(amount, int):
@@ -44,12 +62,12 @@ class Pokemon:
 
         damage -= self.defense
         if damage <= 0:
-            print(f"{self.name}'s defense absorbed the attack!")
+            print(f"{self.operator}'s {self.name}'s defense absorbed the attack!")
             return
 
         self.hp -= damage
         print(
-            f"{self.name} received {damage} damage! Remaining HP: {self.hp}/{self.max_hp}"
+            f"{self.operator}'s {self.name} received {damage} damage! Remaining HP: {self.hp}/{self.max_hp}"
         )
         if self.hp <= 0:
             self.alive = False
@@ -65,7 +83,7 @@ class Pokemon:
             status.apply(self)
             status.decrease_duration()
             if status.duration <= 0:
-                print(f"{self.name}'s {status.name} effect has worn off.")
+                print(f"{self.operator} {self.name}'s {status.name} effect has worn off.")
                 self.statuses.remove(status)
 
     def type_effectiveness(self, opponent: Pokemon):
@@ -75,6 +93,11 @@ class Pokemon:
     def begin(self):
         # 新回合开始时触发的方法
         pass
+
+    def passive_attack(self,play):
+        pass
+
+    
 
     def __str__(self) -> str:
         return f"{self.name} type: {self.type}"
@@ -114,10 +137,48 @@ class GlassPokemon(Pokemon):
 class Bulbasaur(GlassPokemon):
     name = "Bulbasaur"
 
-    def __init__(self, hp=100, attack=50, defense=10) -> None:
+    def __init__(self, hp=200, attack=50, defense=10,avoid=10) -> None:
         # 初始化 Bulbasaur 的属性
-        super().__init__(hp, attack, defense)
+        super().__init__(hp, attack, defense,avoid)
 
     def initialize_skills(self):
         # 初始化技能，具体技能是 SeedBomb 和 ParasiticSeeds
         return [skills.SeedBomb(damage=50), skills.ParasiticSeeds(amount=10)]
+
+
+class ThunderPokemon(Pokemon):
+    type = 'Thunder'
+
+    def type_effectiveness(self, opponent: Pokemon):
+        # 针对敌方 Pokemon 的类型，调整效果倍率
+        effectiveness = 1.0
+        opponent_type = opponent.type
+
+        if opponent_type == "Water":
+            effectiveness = 2.0
+        elif opponent_type == "Glass":
+            effectiveness = 0.5
+        return effectiveness
+    def passive_attack(self,play):
+        self.thunder_attribute(play)
+    
+    def thunder_attribute(self,play):
+        if self.aviod_state:
+            print('是时候反击了')
+            if self.operator =='player':
+                play.player_use_skills()
+            if self.operator =='computer':
+                play.computer_use_skills()
+            self.avoid_state = False
+
+    
+        
+        
+class PikaChu(ThunderPokemon):
+    name = 'Pikachu'
+
+    def __init__(self,hp=160,attack=35,defense=5,avoid=30):
+        super().__init__(hp,attack,defense,avoid)
+    
+    def initialize_skills(self):
+        return [skills.Thunderbolt(),skills.QuickAttack()]

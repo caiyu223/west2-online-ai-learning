@@ -57,3 +57,23 @@ class ParasiticSeeds(Skill):
         # 给对手添加中毒效果
         opponent.add_status_effect(effects.PoisonEffect())
         print(f"{opponent.name} is poisoned by {self.name}!")
+
+
+class Thunderbolt(Skill):
+    name = 'Thunderbolt'
+    
+    def execute(self, user: "Pokemon", opponent: "Pokemon") -> None:
+        opponent.receive_damage(1.4*user.attack)
+        if random.randint(1,100) <= 10:
+            print('麻痹成功，对方的攻击似乎更容易躲避了')
+            opponent.add_status_effect(effects.ParalysisEffect())
+
+        
+class QuickAttack(Skill):
+    name = 'Quick Attack'
+
+    def execute(self, user: "Pokemon", opponent: "Pokemon") -> None:
+        opponent.receive_damage(user.attack)
+        if random.randint(1,100) <= 10:
+            print('second attack')
+            opponent.receive_damage(user.attack)

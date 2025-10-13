@@ -43,3 +43,19 @@ class HealEffect(Effect):
     def apply(self, pokemon: "Pokemon") -> None:
         pokemon.heal_self(self.amount)
         print(f"{pokemon.name} heals {self.amount} HP!")
+
+class ParalysisEffect(Effect):
+    name = 'paralysis'
+
+    def __init__(self, duration: int = 4) -> None:
+        super().__init__(duration)
+        
+
+    def apply(self,pokemon: 'Pokemon'):
+        if self.duration%2 == 0:
+            print('对手处于麻痹了')
+            pokemon.hit_rate -= 30
+        if self.duration%2 == 1:
+            pokemon.hit_rate += 30
+            
+       
