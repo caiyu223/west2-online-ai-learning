@@ -21,8 +21,11 @@ class Pokemon:
         self.aviod_state =False
         self.operator = None
         self.skills = self.initialize_skills()
+        self.delay_skill = None
         self.alive = True
         self.statuses = []
+        self.shield = False
+        self.round = 0
 
     def initialize_skills(self):
         # 抽象方法，子类应实现具体技能初始化
@@ -35,14 +38,24 @@ class Pokemon:
             opponent.aviod_state = True
             return True
 
-    def use_skill(self, skill: Skill, opponent: Pokemon,play: Play):
         # 使用技能
-        if self.avoid_determind(opponent):  
-            print(f"{self.operator}'s skill miss")
-            opponent.passive_attack(play)
-        else:
-            print(f"{self.operator}'s {self.name} uses {skill.name}")
+    def use_skill(self, skill: Skill, opponent: Pokemon,play: Play):
+        
+        if skill.skill_type == 'delay' and self.delay_skill == None:
+            print(f"{self.operator}的 {self.name} 使用了 {skill.name}      延迟技能")
             skill.execute(self, opponent)
+            return
+        elif self.avoid_determind(opponent):  
+            print(f"{self.operator}的技能未命中")
+            opponent.passive_attack(play)
+            #延迟攻击被闪避后，重置self.delay_skill
+            self.delay_skill = None
+            
+        else:
+            print(f"{self.operator}的 {self.name} 使用了 {skill.name}      普通技能")
+            skill.execute(self, opponent)
+            self.delay_skill = None
+            
 
         
     def heal_self(self, amount):
@@ -53,7 +66,18 @@ class Pokemon:
         self.hp += amount
         if self.hp > self.max_hp:
             self.hp = self.max_hp
-        print(f"{self.name} heals {amount} HP! Current HP: {self.hp}/{self.max_hp}")
+        print(f"{self.name} 恢复了 {amount} 点生命值! 当前生命值: {self.hp}/{self.max_hp}")
+
+    def receive_true_damege(self,damage):
+        if not isinstance(damage, int):
+            damage = int(damage)
+        self.hp -= damage
+        print(
+            f"{self.operator}的 {self.name} 受到{damage}点伤害！剩余生命值：{self.hp}/{self.max_hp}"
+        )
+        if self.hp <= 0:
+            self.alive = False
+            print(f"{self.name} 战败！")
 
     def receive_damage(self, damage):
         # 计算伤害并减去防御力，更新 HP
@@ -62,16 +86,16 @@ class Pokemon:
 
         damage -= self.defense
         if damage <= 0:
-            print(f"{self.operator}'s {self.name}'s defense absorbed the attack!")
+            print(f"{self.operator}的 {self.name} 的防御完全抵挡了攻击!")
             return
 
         self.hp -= damage
         print(
-            f"{self.operator}'s {self.name} received {damage} damage! Remaining HP: {self.hp}/{self.max_hp}"
+            f"{self.operator}的 {self.name} 受到{damage}点伤害！剩余生命值：{self.hp}/{self.max_hp}"
         )
         if self.hp <= 0:
             self.alive = False
-            print(f"{self.name} has fainted!")
+            print(f"{self.name} 战败!")
 
     def add_status_effect(self, effect: Effect):
         # 添加状态效果
@@ -83,7 +107,7 @@ class Pokemon:
             status.apply(self)
             status.decrease_duration()
             if status.duration <= 0:
-                print(f"{self.operator} {self.name}'s {status.name} effect has worn off.")
+                print(f"{self.operator} {self.name} 的 {status.name} 效果已经消失。")
                 self.statuses.remove(status)
 
     def type_effectiveness(self, opponent: Pokemon):
@@ -91,16 +115,21 @@ class Pokemon:
         raise NotImplementedError
 
     def begin(self):
+        self.round += 1
         # 新回合开始时触发的方法
-        pass
+        
 
     def passive_attack(self,play):
         pass
 
+    def skip_use_skill(self,skill = None):
+        whether_skip = False
+        return [whether_skip,skill]
+    
+    def __str__(self) -> str:
+        return f"{self.name} 属性: {self.type}"
     
 
-    def __str__(self) -> str:
-        return f"{self.name} type: {self.type}"
 
 
 # GlassPokemon 类
@@ -119,6 +148,7 @@ class GlassPokemon(Pokemon):
         return effectiveness
 
     def begin(self):
+        super().begin()
         # 每个回合开始时执行玻璃属性特性
         self.glass_attribute()
 
@@ -129,7 +159,7 @@ class GlassPokemon(Pokemon):
         if self.hp > self.max_hp:
             self.hp = self.max_hp
         print(
-            f"{self.name} heals {amount} HP at the start of the turn! Current HP: {self.hp}/{self.max_hp}"
+            f"{self.name} 在回合开始时恢复了 {amount} 点生命值! 当前生命值: {self.hp}/{self.max_hp}"
         )
 
 
@@ -182,3 +212,125 @@ class PikaChu(ThunderPokemon):
     
     def initialize_skills(self):
         return [skills.Thunderbolt(),skills.QuickAttack()]
+    
+class Waterpokemon(Pokemon):
+    type = 'Water'
+
+    def type_effectiveness(self, opponent: Pokemon):
+        # 针对敌方 Pokemon 的类型，调整效果倍率
+        effectiveness = 1.0
+        opponent_type = opponent.type
+
+        if opponent_type == "Fire":
+            effectiveness = 2.0
+        elif opponent_type == "Thunder":
+            effectiveness = 0.5
+        return effectiveness
+    
+    #天赋：受到伤害时，有50%的几率减免30%的伤害 
+    def receive_damage(self, damage):
+        # 计算伤害并减去防御力，更新 HP
+        if not isinstance(damage, int):
+            damage = int(damage)
+
+        damage -= self.defense
+        if damage <= 0:
+            print(f"{self.operator}的 {self.name} 的防御完全抵挡了攻击!")
+            return
+        if random.randint(1,100) <= 50:
+            print('伤害减半')
+        
+
+        self.hp -= damage
+        print(
+            f"{self.operator}的 {self.name} 受到了 {damage} 点伤害! 剩余生命值: {self.hp}/{self.max_hp}"
+        )
+        if self.hp <= 0:
+            self.alive = False
+            print(f"{self.name} 战败了!")
+
+class Squirtle(Waterpokemon):
+    name = 'Squirtle'
+
+    def __init__(self,hp=160,attack=25,defense=20,avoid=20):
+        super().__init__(hp,attack,defense,avoid)
+        
+    def initialize_skills(self):
+        return [skills.AquaJet(),skills.Shield()]
+    
+
+    def receive_damage(self, damage):
+        # 计算伤害并减去防御力，更新 HP
+        if not isinstance(damage, int):
+            damage = int(damage)
+
+        damage -= self.defense
+        if damage <= 0:
+            print(f"{self.operator}的 {self.name} 的防御完全抵挡了攻击!")
+            return
+        if random.randint(1,100) <= 50:
+            damage *= 0.5
+            print('伤害减半')
+
+        if self.shield:
+            damage *= 0.5
+            print('护盾生效')
+            self.shield = False
+
+        self.hp -= damage
+        print(
+            f"{self.operator}的 {self.name} 受到了 {damage} 点伤害! 剩余生命值: {self.hp}/{self.max_hp}"
+        )
+        if self.hp <= 0:
+            self.alive = False
+            print(f"{self.name} 战败了!")
+    
+class Firepokemon(Pokemon):
+    type = 'Fire'
+
+    def __init__(self,hp,attack,defense,avoid):
+        super().__init__(hp,attack,defense,avoid)
+        self.attack_increase_layers = 0
+        self.max_attack_increase_layers = 4
+    
+    def type_effectiveness(self, opponent: Pokemon):
+        # 针对敌方 Pokemon 的类型，调整效果倍率
+        effectiveness = 1.0
+        opponent_type = opponent.type
+
+        if opponent_type == "Glass":
+            effectiveness = 2.0
+        elif opponent_type == "Water":
+            effectiveness = 0.5
+        return effectiveness
+    #火系天赋：每次造成伤害，叠加10%攻击力，最多4层
+    def use_skill(self, skill: Skill, opponent: Pokemon,play: Play):
+        if skill.skill_type == 'delay' and self.delay_skill == None:
+            print(f"{self.operator}的 {self.name} 使用了 {skill.name}      延迟技能")
+            skill.execute(self, opponent)
+            return
+        
+        elif self.avoid_determind(opponent):  
+            print(f"{self.operator}的技能未命中")
+            opponent.passive_attack(play)
+            self.delay_skill = None
+
+        else:
+            print(f"{self.operator}的 {self.name} 使用了 {skill.name}      普通技能")
+            skill.execute(self, opponent)
+            self.delay_skill = None
+            if self.attack_increase_layers < self.max_attack_increase_layers:
+                self.attack_increase_layers += 1
+                self.attack *= 1.1
+
+class Charmander(Firepokemon):
+    name = "Charmander"
+
+    def __init__(self,hp=160,attack=25,defense=20,avoid=20):
+        super().__init__(hp,attack,defense,avoid)
+        
+       
+        self.FlameCharge_used_round = 0
+
+    def initialize_skills(self):
+        return [skills.Ember(),skills.FlameCharge()]
