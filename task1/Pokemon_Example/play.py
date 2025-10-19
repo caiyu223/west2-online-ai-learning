@@ -123,11 +123,14 @@ class Play:
             skills = self.current_player_pokemon.skills
             for i, skill in enumerate(skills, 1):
                 print(f"{i}: {skill}")
-            choice = input("通过数字选择你想要使用的技能:")
-            if valid_choice(choice, len(skills)):
-                player_skill = self.current_player_pokemon.skills[int(choice) - 1]
-            else:
-                print("无效选择，请选择一个有效的技能")
+            
+            while True:
+                choice = input("通过数字选择你想要使用的技能:")
+                if valid_choice(choice, len(skills)):
+                    player_skill = self.current_player_pokemon.skills[int(choice) - 1]
+                    break
+                else:
+                    print("无效选择，请选择一个有效的技能")
 
         self.current_player_pokemon.use_skill(
             player_skill, self.current_computer_pokemon, self
