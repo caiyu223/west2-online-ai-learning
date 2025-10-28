@@ -1,10 +1,10 @@
 from selenium import webdriver
-from selenium.webdriver.edge.service import Service as EdgeService
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.edge.options import Options
+from selenium.webdriver.edge.service import Service as EdgeService #edge驱动
+from selenium.webdriver.support.ui import WebDriverWait  #等待元素
+from selenium.webdriver.common.by import By  #路径
+from selenium.webdriver.support import expected_conditions as EC  #webdriverwait中需要的参数
+from selenium.webdriver.common.action_chains import ActionChains  #动作链
+from selenium.webdriver.edge.options import Options  #一些设置，避免被识别为自动化脚本
 import json
 import time
 import random
@@ -18,6 +18,7 @@ class Zhihu_Crawler():
         self.answer_num = 2
         self.question_list = []
         self.questions_window = None
+        #浏览器初始化
         self.service = EdgeService(r"C:\Program Files (x86)\Microsoft\Edge\Application\edgedriver_win64 (1)\msedgedriver.exe")
         self.options = Options()
         
@@ -38,12 +39,13 @@ class Zhihu_Crawler():
         
         self.driver = webdriver.Edge(service = self.service,options=self.options)
 
+        #初始化csv文件
         self.fieldname = ['问题','详细问题','回答表']
         with open('content.csv','w',encoding= 'utf-8-sig')as f:
             writer = csv.DictWriter(f,fieldnames=self.fieldname)
             writer.writeheader()
 
-
+    #初次登入，获取cookies
     def first_login(self,login_url):
         service = EdgeService(r"C:\Program Files (x86)\Microsoft\Edge\Application\edgedriver_win64 (1)\msedgedriver.exe")
         self.driver = webdriver.Edge(service = service)
