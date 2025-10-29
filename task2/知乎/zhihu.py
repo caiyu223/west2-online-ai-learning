@@ -14,8 +14,8 @@ import csv
 
 class Zhihu_Crawler():
     def __init__(self):
-        self.question_num = 9
-        self.answer_num = 2
+        self.question_num = 25
+        self.answer_num = 10
         self.question_list = []
         self.questions_window = None
         #浏览器初始化
@@ -41,7 +41,7 @@ class Zhihu_Crawler():
 
         #初始化csv文件
         self.fieldname = ['问题','详细问题','回答表']
-        with open('content.csv','w',encoding= 'utf-8-sig')as f:
+        with open('content2.csv','w',encoding= 'utf-8-sig')as f:
             writer = csv.DictWriter(f,fieldnames=self.fieldname)
             writer.writeheader()
 
@@ -193,7 +193,7 @@ class Zhihu_Crawler():
                     time.sleep(1)
                 elements_content = [i.text for i in elements]
                 dic = {'问题':question_text,'详细问题':question_content_text,'回答表':elements_content}
-                with open('content.csv','a',encoding= 'utf-8-sig') as file:
+                with open('content2.csv','a',encoding= 'utf-8-sig') as file:
                         writer = csv.DictWriter(file,fieldnames=self.fieldname)
                         writer.writerow(dic)
                 print(len(elements))
