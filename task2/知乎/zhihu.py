@@ -168,8 +168,8 @@ class Zhihu_Crawler():
                 print(question)
                 time.sleep(1)
                 question_text = question.text
-                print(question.text)
-                print(question_text)
+                #print(question.text)
+                #print(question_text)
                 time.sleep(1)
             except:
                 print('无问题')
