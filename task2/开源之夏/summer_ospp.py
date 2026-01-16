@@ -22,7 +22,7 @@ def get_list(page):
     }
 
     list_url='https://summer-ospp.ac.cn/api/getProList'
-    web1=requests.post(list_url,json=body,headers=headers)
+    web1=requests.post(list_url,headers=headers,json=body)
     list_data=web1.json()
     programCodes=[i["programCode"] for i in list_data["rows"]]
     return programCodes

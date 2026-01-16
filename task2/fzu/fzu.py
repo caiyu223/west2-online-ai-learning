@@ -49,6 +49,7 @@ def test_clean(text):
 csv_initialize()
 page = 190
 final_page = 205
+#定义开始和结束页面
 coloums= ['title','time','department','file_dowload_situation','content']
 final_content = []
 

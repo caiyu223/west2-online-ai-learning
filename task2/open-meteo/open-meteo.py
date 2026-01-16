@@ -32,6 +32,8 @@ def get_message(url,params):
     with open('data.json','w',encoding='utf-8-sig') as f:
         json.dump(data,f)
 
+get_message(url,params)
+
 with open("data.json",'r',encoding='utf-8-sig') as f:
     data = json.load(f)
 

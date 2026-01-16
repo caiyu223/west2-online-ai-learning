@@ -7,6 +7,17 @@ import csv
 import pandas as pd
 import re
 
+
+
+from selenium import webdriver
+from selenium.webdriver.edge.service import Service
+from webdriver_manager.microsoft import EdgeChromiumDriverManager  # 导入自动管理模块
+
+# 核心修改：让 webdriver-manager 自动处理版本和下载
+service = Service(EdgeChromiumDriverManager().install())
+driver = webdriver.Edge(service=service)
+
+
 def text_clean(text):
     result = re.sub(r'\s+', '',text )
     result = re.sub(r'[a-zA-Z]', '', result)
@@ -37,17 +48,19 @@ df = pd.DataFrame(columns=['title','time','department','file_dowload_situation',
 df.to_csv("data_selenium.csv",index=False)
 print('csv初始化')
 '''
-service = edgeservice(r"C:\Program Files (x86)\Microsoft\Edge\Application\edgedriver_win64 (1)\msedgedriver.exe")
-driver = webdriver.Edge(service=service)
+#service = edgeservice(r"C:\Program Files (x86)\Microsoft\Edge\Application\edgedriver_win64 (1)\msedgedriver.exe")
+#driver = webdriver.Edge(service=service)
 
 page = 172
 f_page = 179
 get_num = 1
+
 content = []
 while page <= f_page:
     time.sleep(1)
     driver.get(url = f'https://jwch.fzu.edu.cn/jxtz/{page}.htm')
     message_window = driver.current_window_handle
+    #记录当前页面
     hrefs = driver.find_elements(By.XPATH,'//ul[@class="list-gl"]/*/a')
     print(f'第{page}页')
     page += 1
@@ -57,6 +70,7 @@ while page <= f_page:
             href.click()
             windows = driver.window_handles
             driver.switch_to.window(windows[-1])
+            #click()不切换页面，要手动切
             time.sleep(2)
             text_content = driver.find_element(By.XPATH,'//div[@id="vsb_content"]').text
             text_content = re.sub(r'\n+', '',text_content)
