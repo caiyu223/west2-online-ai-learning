@@ -1,7 +1,11 @@
-
+task4/
+task5/
+task6/
 cifar-10-batches-py/
 *.npy
 __MACOSX/
+.vscode/*.user.*
+.vscode/secret*.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
