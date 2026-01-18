@@ -1,6 +1,7 @@
 task4/
 task5/
 task6/
+###
 cifar-10-batches-py/
 *.npy
 __MACOSX/
